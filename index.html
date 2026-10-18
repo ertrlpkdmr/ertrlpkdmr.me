@@ -2,6 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
+<script>document.documentElement.classList.add('js')</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Ertuğrul Pekdemir — Vidrobe Kurucu Ortağı, Mobil Geliştirici &amp; Siber Güvenlik</title>
@@ -255,11 +256,7 @@ img, svg { display: block; }
   padding: 14px;
 }
 .scan .shot { position: relative; aspect-ratio: 4 / 5; overflow: hidden; border-radius: 4px; background: var(--band-line); }
-.scan img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.08) brightness(.95); }
-.scan .shot::before {
-  content: ''; position: absolute; inset: 0; z-index: 1;
-  background: var(--band-accent); mix-blend-mode: color; opacity: .55;
-}
+.scan img { width: 100%; height: 100%; object-fit: cover; }
 .scan .shot::after { /* tarama çizgisi: bir kez yukarıdan aşağı */
   content: ''; position: absolute; left: 0; right: 0; top: -12%; height: 12%; z-index: 2;
   background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--band-accent) 55%, transparent) 85%, var(--band-accent));
@@ -466,10 +463,66 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 footer a { text-decoration: none; }
 footer a:hover { color: var(--ink); }
 
+
+/* ---------- Bölüm animasyonları (ekrana girince bir kez) ---------- */
+/* Vidrobe: tarama çizgisi kartı geçerken kesikli kalıp kıyafete oturuyor */
+.fitting .sweep {
+  position: absolute; left: 0; right: 0; top: -14%; height: 14%; pointer-events: none;
+  background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--accent) 35%, transparent) 85%, var(--accent));
+  opacity: 0;
+}
+.fitting .cap .on { color: var(--accent); font-weight: 600; }
+.js .fitting .fit { clip-path: inset(0 0 100% 0); }
+.js .fitting .pins circle { opacity: 0; transform: scale(.2); transform-box: fill-box; transform-origin: center; }
+.js .fitting .cap .on { opacity: 0; }
+.fitting.is-in .sweep { animation: fit-sweep 1.2s linear .15s forwards; }
+.fitting.is-in .fit { animation: fit-reveal .58s linear .61s forwards; }
+.fitting.is-in .pins circle { animation: pin .35s cubic-bezier(.3,1.6,.5,1) forwards; }
+.fitting.is-in .pins circle:nth-child(1) { animation-delay: .72s; }
+.fitting.is-in .pins circle:nth-child(2) { animation-delay: .76s; }
+.fitting.is-in .pins circle:nth-child(3) { animation-delay: 1.2s; }
+.fitting.is-in .pins circle:nth-child(4) { animation-delay: 1.24s; }
+.fitting.is-in .cap .on { animation: show .01s 1.45s forwards; }
+@keyframes fit-sweep { 0% { top: -14%; opacity: 1; } 92% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+@keyframes fit-reveal { to { clip-path: inset(0 0 0 0); } }
+@keyframes pin { to { opacity: 1; transform: scale(1); } }
+
+/* Güvenlik başlığı: şifre çözülürken karakterler sabit genişlikte kalır */
+[data-decrypt] .w { display: inline-block; white-space: nowrap; text-align: left; }
+[data-decrypt] .x { color: var(--band-accent); }
+
+/* Sertifikalar: tikler sırayla çiziliyor */
+.certs .cn { display: inline-flex; align-items: baseline; gap: .6rem; }
+.certs .chk { width: 18px; height: 18px; flex: none; color: var(--band-accent); align-self: center; }
+.certs .chk path { stroke-dasharray: 24; stroke-dashoffset: 0; }
+.js .certs .chk path { stroke-dashoffset: 24; }
+.js .certs .co { opacity: .35; transition: opacity .3s; }
+.certs.is-in .chk path { animation: tick .45s ease-out forwards; animation-delay: calc(.25s + var(--i) * .3s); }
+.certs.is-in .co { opacity: 1; transition-delay: calc(.45s + var(--i) * .3s); }
+@keyframes tick { to { stroke-dashoffset: 0; } }
+
+/* Menü: bulunduğun bölüm işaretli */
+.menu a { transition: color .2s, border-color .2s; }
+.menu a[aria-current="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+.top.on-dark .menu a[aria-current="true"] { color: var(--band-text); border-bottom-color: var(--band-accent); }
+
+/* Form gönderiliyor */
+.btn.sending { opacity: .7; pointer-events: none; }
+.btn.sending::after {
+  content: ''; width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid currentColor; border-right-color: transparent;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
 /* ---------- Hareket tercihi ---------- */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .redact::after, .scan .shot::after { display: none; }
+  .redact::after, .scan .shot::after, .fitting .sweep { display: none; }
+  .js .fitting .fit { clip-path: none; }
+  .js .fitting .pins circle { opacity: 1; transform: none; }
+  .js .fitting .cap .on, .js .certs .co { opacity: 1; }
+  .js .certs .chk path { stroke-dashoffset: 0; }
   .prompt .caret { animation: none; }
   .scan .ok { opacity: 1; animation: none; }
   * { transition: none !important; }
@@ -548,20 +601,25 @@ footer a:hover { color: var(--ink); }
         </dl>
       </div>
 
-      <div class="fitting" role="img" aria-label="Askıdaki bir tişört ve yapay zekânın onu bir bedene uyarladığı kesikli çizgili hali">
+      <div class="fitting" data-anim role="img" aria-label="Askıdaki bir tişört ve yapay zekânın onu bir bedene uyarladığı kesikli çizgili hali">
         <svg viewBox="0 0 400 500" fill="none" aria-hidden="true">
           <!-- askı -->
           <path d="M200 70c0-14 10-22 20-22s18 8 18 18c0 12-12 16-24 24L92 160h216L218 98" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--ink)"/>
           <!-- askıdaki tişört -->
           <path d="M150 160 92 196l22 52 34-14v170h104V234l34 14 22-52-58-36c-6 18-26 28-50 28s-44-10-50-28Z" fill="var(--paper-2)" stroke="var(--ink)" stroke-width="4" stroke-linejoin="round"/>
           <!-- yapay zekâ ile oturtulmuş hali -->
-          <path d="M140 150 76 192l26 64 38-16v184h120V240l38 16 26-64-64-42c-8 22-32 34-60 34s-52-12-60-34Z" stroke="var(--accent)" stroke-width="3.5" stroke-dasharray="10 9" stroke-linejoin="round"/>
-          <circle cx="76" cy="192" r="6" fill="var(--accent)"/>
-          <circle cx="324" cy="192" r="6" fill="var(--accent)"/>
-          <circle cx="140" cy="424" r="6" fill="var(--accent)"/>
-          <circle cx="260" cy="424" r="6" fill="var(--accent)"/>
+          <g class="fit">
+            <path d="M140 150 76 192l26 64 38-16v184h120V240l38 16 26-64-64-42c-8 22-32 34-60 34s-52-12-60-34Z" stroke="var(--accent)" stroke-width="3.5" stroke-dasharray="10 9" stroke-linejoin="round"/>
+          </g>
+          <g class="pins">
+            <circle cx="76" cy="192" r="6" fill="var(--accent)"/>
+            <circle cx="324" cy="192" r="6" fill="var(--accent)"/>
+            <circle cx="140" cy="424" r="6" fill="var(--accent)"/>
+            <circle cx="260" cy="424" r="6" fill="var(--accent)"/>
+          </g>
         </svg>
-        <div class="cap"><span>askıda</span><span style="color:var(--accent);font-weight:600">üzerinde</span></div>
+        <span class="sweep" aria-hidden="true"></span>
+        <div class="cap"><span>askıda</span><span class="on">üzerinde</span></div>
       </div>
     </div>
   </section>
@@ -570,7 +628,7 @@ footer a:hover { color: var(--ink); }
   <section class="security block" id="guvenlik">
     <div class="wrap">
       <div class="sec-head">
-        <h2 class="h2">Siber güvenlik, en çok ilgilendiğim alan.</h2>
+        <h2 class="h2" data-decrypt>Siber güvenlik, en çok ilgilendiğim alan.</h2>
         <p class="lead">
           Bu ilgiyi okumakla bırakmıyor, pratiğe döküyorum. Bir sistemin nasıl kırıldığını
           anlamak, onu nasıl koruyacağını öğrenmenin en kısa yolu.
@@ -595,13 +653,13 @@ footer a:hover { color: var(--ink); }
         </li>
       </ul>
 
-      <div class="certs">
+      <div class="certs" data-anim>
         <h3>Sertifikalar</h3>
         <ol>
-          <li><span class="cy">2026</span><span class="cn">Certified Cybersecurity Foundations</span><span class="co">Hackviser</span></li>
-          <li><span class="cy">2026</span><span class="cn">Beyaz Şapkalı Hacker Eğitimi</span><span class="co">Siber Vatan</span></li>
-          <li><span class="cy">2025</span><span class="cn">Uygulamalı Etik Hacker Olma Kursu</span><span class="co">Udemy</span></li>
-          <li><span class="cy">2024</span><span class="cn">Siber Güvenliğe Giriş</span><span class="co">BTK Akademi</span></li>
+          <li style="--i:0"><span class="cy">2026</span><span class="cn"><svg class="chk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>Certified Cybersecurity Foundations</span><span class="co">Hackviser</span></li>
+          <li style="--i:1"><span class="cy">2026</span><span class="cn"><svg class="chk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>Beyaz Şapkalı Hacker Eğitimi</span><span class="co">Siber Vatan</span></li>
+          <li style="--i:2"><span class="cy">2025</span><span class="cn"><svg class="chk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>Uygulamalı Etik Hacker Olma Kursu</span><span class="co">Udemy</span></li>
+          <li style="--i:3"><span class="cy">2024</span><span class="cn"><svg class="chk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>Siber Güvenliğe Giriş</span><span class="co">BTK Akademi</span></li>
         </ol>
       </div>
     </div>
@@ -688,7 +746,7 @@ footer a:hover { color: var(--ink); }
           <label for="message">Mesajın</label>
           <textarea id="message" name="message" required></textarea>
         </div>
-        <button type="submit" class="btn btn-solid">Mesajı gönder</button>
+        <button type="submit" class="btn btn-solid" id="send-btn">Mesajı gönder</button>
       </form>
     </div>
   </section>
@@ -790,6 +848,71 @@ fetch(`https://api.github.com/users/${GITHUB_USER}/repos?sort=updated&per_page=1
     buildFilters();
   })
   .catch(() => { /* GitHub'a ulaşılamazsa yedek liste görünmeye devam eder */ });
+
+// ---------- Bölüm animasyonları ----------
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const animIO = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    e.target.classList.add('is-in');
+    if (e.target.matches('[data-decrypt]')) decrypt(e.target);
+    animIO.unobserve(e.target);
+  });
+}, { threshold: 0.35 });
+document.querySelectorAll('[data-anim], [data-decrypt]').forEach(el => animIO.observe(el));
+
+// Şifre çözülme: her kelime kendi genişliğinde sabit, karakterler soldan sağa çözülüyor
+function decrypt(el) {
+  const text = el.textContent.trim();
+  if (reduceMotion) return;
+  el.setAttribute('aria-label', text);
+  const glyphs = 'abcdeghknopsuvxz0123456789<>/=_';
+  const words = text.split(' ');
+  el.innerHTML = words.map(w => `<span class="w" aria-hidden="true">${w}</span>`).join(' ');
+  const spans = [...el.querySelectorAll('.w')];
+  spans.forEach(sp => { sp.style.width = sp.getBoundingClientRect().width + 'px'; });
+  const total = text.replace(/ /g, '').length;
+  const start = performance.now(), dur = 1100;
+  (function frame(now) {
+    const done = Math.min(1, (now - start) / dur) * total;
+    let n = 0;
+    spans.forEach((sp, wi) => {
+      const w = words[wi];
+      let out = '';
+      for (const ch of w) {
+        out += n < done ? ch : `<span class="x">${glyphs[Math.floor(Math.random() * glyphs.length)]}</span>`;
+        n++;
+      }
+      sp.innerHTML = out;
+    });
+    if (done < total) requestAnimationFrame(frame);
+    else { el.textContent = text; el.removeAttribute('aria-label'); }
+  })(start);
+}
+
+// Menüde bulunduğun bölüm
+const links = new Map([...menu.querySelectorAll('a')].map(a => [a.getAttribute('href').slice(1), a]));
+const spy = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    const a = links.get(e.target.id);
+    if (!a) return;
+    if (e.isIntersecting) {
+      links.forEach(l => l.removeAttribute('aria-current'));
+      a.setAttribute('aria-current', 'true');
+    } else if (a.getAttribute('aria-current')) {
+      a.removeAttribute('aria-current');
+    }
+  });
+}, { rootMargin: '-45% 0px -50% 0px' });
+links.forEach((_, id) => { const sec = document.getElementById(id); if (sec) spy.observe(sec); });
+
+// Form gönderilirken geri bildirim
+const sendBtn = document.getElementById('send-btn');
+sendBtn.closest('form').addEventListener('submit', () => {
+  sendBtn.textContent = 'Gönderiliyor';
+  sendBtn.classList.add('sending');
+});
 </script>
 
 </body>
